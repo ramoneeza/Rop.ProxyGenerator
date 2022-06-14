@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Rop.ProxyGenerator
@@ -23,7 +24,7 @@ namespace Rop.ProxyGenerator
             Namespace = classToAugment.SyntaxTree.GetNamespace();
             IsStatic = classToAugment.IsStatic();
         }
-        public IEnumerable<string> GetHeader()
+        public IEnumerable<string> GetHeader(INamedTypeSymbol interfacetoinclude)
         {
             foreach (var u in Usings)
             {
@@ -32,6 +33,7 @@ namespace Rop.ProxyGenerator
 
             yield return $"namespace {Namespace}";
             yield return "{";
+            //yield return $"\tpublic {(IsStatic?"static ":"")}partial class {Identifier}:{interfacetoinclude.ToDisplayString()}";
             yield return $"\tpublic {(IsStatic?"static ":"")}partial class {Identifier}";
             yield return "\t{";
         }

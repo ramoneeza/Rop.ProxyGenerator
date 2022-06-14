@@ -6,10 +6,10 @@ using System.Threading.Tasks;
 
 namespace Test.ProxyGenerator
 {
-    public partial class Class1 : IMyInterface
+    public partial class Class1<T> : IMyInterface<T>
     {
         public event EventHandler? ValueChanged;
-        public event EventHandler<int>? IntValueChanged;
+        public event EventHandler<T>? TValueChanged;
         public string Name { get; set; }
         public string Description { get; set; }
         public DateTime Fecha { get; } = DateTime.Now;
@@ -18,7 +18,7 @@ namespace Test.ProxyGenerator
             Name = name;
             Description = description;
         }
-        public string SacaAlgo(int valor, string otroparametro)
+        public string SacaAlgo(T valor, string otroparametro)
         {
             throw new NotImplementedException();
         }

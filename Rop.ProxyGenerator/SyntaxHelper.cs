@@ -1,63 +1,42 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
-using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Rop.ProxyGenerator
 {
-    public static class SyntaxHelper
+    public static partial class SyntaxHelper
     {
-        /// <summary>
-        /// Class is decorated with some attribute
-        /// </summary>
-        public static bool IsDecoratedWith(this TypeDeclarationSyntax item, string attname)
-        {
-            return item.AttributeLists.SelectMany(a => a.Attributes).Any(a => a.Name.ToString().Equals(attname));
-        }
-        /// <summary>
-        /// Member is decorated with some attribute
-        /// </summary>
-        public static bool IsDecoratedWith(this MemberDeclarationSyntax item, string attname)
-        {
-            return item.AttributeLists.SelectMany(a => a.Attributes).Any(a => a.Name.ToString().Equals(attname));
-        }
-        /// <summary>
-        /// Get decorated attribute for a class
-        /// </summary>
-        public static AttributeSyntax GetDecoratedWith(this TypeDeclarationSyntax item, string attname)
-        {
-            return item.AttributeLists.SelectMany(a => a.Attributes).FirstOrDefault(a => a.Name.ToString().Equals(attname));
-        }
-        /// <summary>
-        /// Get decorated attribute for a member
-        /// </summary>
-        public static AttributeSyntax GetDecoratedWith(this MemberDeclarationSyntax item, string attname)
-        {
-            return item.AttributeLists.SelectMany(a => a.Attributes).FirstOrDefault(a => a.Name.ToString().Equals(attname));
-        }
-        /// <summary>
+       /// <summary>
         /// Childs of type T
         /// </summary>
-        public static IEnumerable<T> ChildNodesOfType<T>(this SyntaxNode node)
-        {
-            return node.ChildNodes().OfType<T>();
-        }
-        public static IEnumerable<SyntaxNode> ChildNodesOfType(this SyntaxNode node,params Type[] types)
+        public static IEnumerable<T> ChildNodesOfType<T>(this SyntaxNode node) => node.ChildNodes().OfType<T>();
+
+       public static IEnumerable<SyntaxNode> ChildNodesOfType(this SyntaxNode node,params Type[] types)
         {
             return node.ChildNodes().Where(n => types.Any(t=>IsSameOrSubclass(t,n.GetType())));
         }
         public static bool IsSameOrSubclass(Type potentialBase, Type potentialDescendant)
         {
-            return potentialDescendant.IsSubclassOf(potentialBase)
-                   || potentialDescendant == potentialBase;
+            return potentialDescendant.IsSubclassOf(potentialBase) || potentialDescendant == potentialBase;
         }
 
         public static bool IsStatic(this ClassDeclarationSyntax cds)
         {
            return cds.Modifiers.Any(SyntaxKind.StaticKeyword);
+        }
+
+        public static TypeName GetInterfaceImplementation(this ClassDeclarationSyntax cds, TypeName originalinterface)
+        {
+            if (!originalinterface.IsGeneric) return originalinterface;
+            foreach (var basetype in cds.BaseList.Types)
+            {
+                var n = basetype.ToString();
+            }
+            return originalinterface;
         }
 
         public static string ToStringValue(this ExpressionSyntax expression)
@@ -99,19 +78,14 @@ namespace Rop.ProxyGenerator
             return r.ChildNodesOfType<BaseNamespaceDeclarationSyntax>().FirstOrDefault()?.Name.ToString();
         }
 
-
-        /// <summary>
-        /// Appendlines to a stringbuilder
-        /// </summary>
-        public static void AppendLines(this StringBuilder sb, params string[] lines)
+        public static IEnumerable<ISymbol> GetOrderedMembers(this INamedTypeSymbol typeSymbol)
         {
-            AppendLines(sb, lines as IEnumerable<string>);
-        }
-        public static void AppendLines(this StringBuilder sb, IEnumerable<string> lines)
-        {
-            foreach (var line in lines)
+            var morder = typeSymbol.MemberNames.ToList();
+            var mnames = morder.ToImmutableHashSet();
+            var dic=typeSymbol.GetMembers().Where(mm => mm.Name.InList(mnames)).ToDictionary(mm=>mm.Name);
+            foreach (var m in morder)
             {
-                sb.AppendLine(line);
+                yield return dic[m];
             }
         }
 
