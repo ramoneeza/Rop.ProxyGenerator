@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
@@ -16,6 +17,10 @@ namespace Rop.ProxyGenerator
         private static readonly string[] _memberExplicitAtts=new string[]{"Explicit","ExplicitOverrideNoBase","ExplicitOverrideWithPreBase","ExplicitOverrideWithPostBase"};
         private static readonly ImmutableHashSet<string> _memberExplicitAttsHash = _memberExplicitAtts.ToImmutableHashSet();
         private static readonly ImmutableHashSet<string> _memberAllAttsHash = _memberOverrideAtts.Concat(_memberExplicitAtts).ToImmutableHashSet();
+
+        private static readonly string[] _includeAttributesAtts=new string[]{"IncludeNextAttributes"};
+        private static readonly ImmutableHashSet<string> _includeAttributesAttsHash= _includeAttributesAtts.ToImmutableHashSet();
+
         public void Initialize(GeneratorInitializationContext context)
         {
 //#if DEBUG
@@ -89,6 +94,9 @@ namespace Rop.ProxyGenerator
             var specialatt = prop.GetDecoratedWith(_memberAllAttsHash);
             var isexplicit =(specialatt!=null)&& _memberExplicitAttsHash.Contains(specialatt.GetShortName());
 
+            var includeatts = new IncludesAtts(prop);
+
+
             if (isexplicit)
                 ExplicitProperty();
             else
@@ -102,6 +110,7 @@ namespace Rop.ProxyGenerator
             {
                 var aoverride = specialatt;
                 var voro = GetOverrideString(aoverride);
+                includeatts.Render(sb,2);
                 sb.Append($"\t\tpublic {voro} {tipo} {name}");
                 sb.Append("{");
                 if (!prop.IsWriteOnly) sb.Append($" get=>{field}.{name};");
@@ -121,7 +130,7 @@ namespace Rop.ProxyGenerator
                 if (includeoverride)
                 {
                     var thias = $"(this as {interfacename})";
-
+                    includeatts.Render(sb,2);
                     sb.Append($"\t\tprotected override {tipo} {name}");
                     sb.Append("{");
                     if (!prop.IsWriteOnly) sb.Append($" get=>{thias}.{name};");
@@ -158,6 +167,8 @@ namespace Rop.ProxyGenerator
             var specialatt = meth.GetDecoratedWith(_memberAllAttsHash);
             var isexplicit =(specialatt!=null)&& _memberExplicitAttsHash.Contains(specialatt.GetShortName());
 
+            var includeatts = new IncludesAtts(meth);
+
             if (isexplicit)
             {
                 ExplicitMethod();
@@ -193,7 +204,6 @@ namespace Rop.ProxyGenerator
                 var pnames = string.Join(", ", meth.Parameters.Select(p => p.MetadataName));
                 var retstr = (tipo == "void") ? "" : "return ";
                 var includeoverride = nobase | prebase | postbase;
-
                 sb.AppendLines(2,
                     $"{tipo} {interfacename}.{name}({pdef})",
                     "{");
@@ -204,6 +214,7 @@ namespace Rop.ProxyGenerator
                 if (includeoverride)
                 {
                     var thisas = $"(this as {interfacename})";
+                    includeatts.Render(sb,2);
                     sb.AppendLines(2,
                         $"protected override {tipo} {name}({pdef})",
                         "{");
@@ -222,7 +233,7 @@ namespace Rop.ProxyGenerator
                 var pdef = string.Join(", ", meth.Parameters.Select(p => $"{p.Type.ToString()} {p.MetadataName}"));
                 var pnames = string.Join(", ", meth.Parameters.Select(p => p.MetadataName));
                 var retstr = (tipo == "void") ? "" : "return ";
-
+                includeatts.Render(sb,2);
                 sb.AppendLines(2,
                     $"public {voro} {tipo} {name}({pdef})",
                     "{");
@@ -249,5 +260,28 @@ namespace Rop.ProxyGenerator
                 ClassesToAugment = new ConcurrentBag<ProxyClassToAugment>();
             }
         }
+    }
+
+    public class IncludesAtts
+    {
+        public List<string> AttsToInclude { get; } = new List<string>();
+        public IncludesAtts(ISymbol namedTypeSymbol)
+        {
+            var nextatts = namedTypeSymbol.GetAttributes().SkipWhile(a => a.GetShortName() != "IncludeNextAttributes")
+                .ToList();
+            if (nextatts.Any())
+            {
+                AttsToInclude.AddRange(nextatts.Skip(1).Select(a=>a.ToString()));
+            }
+        }
+
+        public void Render(StringBuilder sb, int tabs)
+        {
+            foreach (var att in AttsToInclude)
+            {
+                sb.AppendLines(tabs,$"[{att}]");
+            }
+        }
+        public bool IsEmpty => AttsToInclude.Count == 0;
     }
 }
