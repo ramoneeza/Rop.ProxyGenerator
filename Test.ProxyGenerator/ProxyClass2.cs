@@ -2,7 +2,7 @@
 
 namespace Test.ProxyGenerator;
 
-[ProxyOf(typeof(IDisposable), nameof(ProxyClass3.MyInterface3))]
+[ProxyOf(typeof(IDisposable), nameof(MyInterface3))]
 public partial class ProxyClass3 : IDisposable
 {
     public IDisposable MyInterface3 { get; }
@@ -23,7 +23,7 @@ public abstract class OneClase3
     {
         return a - b;
     }
-    public abstract int MyMethod3(int a, int b);
+    protected abstract int MyMethod3(int a, int b);
 }
 
 [ProxyOf(typeof(IOv1), nameof(OneClase4.Ovi))]
@@ -42,6 +42,6 @@ public interface IOv1
     int MyMethod(int a,int b);
     [OverrideWithPostBase]
     int MyMethod2(int a,int b);
-    [OverrideNoBase]
+    [ExplicitOverrideNoBase]
     int MyMethod3(int a,int b);
 }

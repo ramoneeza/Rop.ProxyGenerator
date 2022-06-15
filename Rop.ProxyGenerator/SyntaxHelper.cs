@@ -47,8 +47,16 @@ namespace Rop.ProxyGenerator
                     return tof.Type.ToString();
                 case InvocationExpressionSyntax inv:
                     var a = inv.ArgumentList.Arguments.FirstOrDefault() as ArgumentSyntax;
-                    var b = a?.Expression as MemberAccessExpressionSyntax;
-                    var i = b?.ChildNodes().Last() as IdentifierNameSyntax;
+                    IdentifierNameSyntax i=null;
+                    if (a?.Expression is IdentifierNameSyntax aasi)
+                    {
+                        i = aasi;
+                    }
+                    else
+                    {
+                        var b =  a?.Expression as MemberAccessExpressionSyntax;
+                        i = b?.ChildNodes().Last() as IdentifierNameSyntax;
+                    }
                     return i?.Identifier.ToString() ?? "";
                 case ArrayCreationExpressionSyntax arr:
                     var arrv = arr.Initializer.Expressions.Select(c => c.ToStringValue());

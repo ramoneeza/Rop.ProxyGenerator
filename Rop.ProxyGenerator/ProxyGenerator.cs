@@ -13,7 +13,9 @@ namespace Rop.ProxyGenerator
     {
         private static readonly string[] _memberOverrideAtts=new string[]{"OverrideNoBase","OverrideNew","OverrideWithPreBase","OverrideWithPostBase"};
         private static readonly ImmutableHashSet<string> _memberOverrideAttsHash = _memberOverrideAtts.ToImmutableHashSet();
-
+        private static readonly string[] _memberExplicitAtts=new string[]{"Explicit","ExplicitOverrideNoBase","ExplicitOverrideWithPreBase","ExplicitOverrideWithPostBase"};
+        private static readonly ImmutableHashSet<string> _memberExplicitAttsHash = _memberExplicitAtts.ToImmutableHashSet();
+        private static readonly ImmutableHashSet<string> _memberAllAttsHash = _memberOverrideAtts.Concat(_memberExplicitAtts).ToImmutableHashSet();
         public void Initialize(GeneratorInitializationContext context)
         {
 //#if DEBUG
@@ -82,13 +84,51 @@ namespace Rop.ProxyGenerator
             var name = prop.Name;
             var tipo = prop.Type;
             var field = classToAugment.InterfaceToProxy.FieldName;
-            var aoverride=prop.GetDecoratedWith(_memberOverrideAttsHash);
-            var voro = GetOverrideString(aoverride);
-            sb.Append($"\t\tpublic {voro} {tipo} {name}");
-            sb.Append("{");
-            if (!prop.IsWriteOnly) sb.Append($" get=>{field}.{name};");
-            if (!prop.IsReadOnly) sb.Append($" set=>{field}.{name}=value;");
-            sb.AppendLine("}");
+            var interfacename=classToAugment.InterfaceToProxy.InterfaceName.FullName;
+
+            var specialatt = prop.GetDecoratedWith(_memberAllAttsHash);
+            var isexplicit =(specialatt!=null)&& _memberExplicitAttsHash.Contains(specialatt.GetShortName());
+
+            if (isexplicit)
+                ExplicitProperty();
+            else
+                NoExplicitProperty();
+            
+            
+            
+            // Local Functions
+
+            void NoExplicitProperty()
+            {
+                var aoverride = specialatt;
+                var voro = GetOverrideString(aoverride);
+                sb.Append($"\t\tpublic {voro} {tipo} {name}");
+                sb.Append("{");
+                if (!prop.IsWriteOnly) sb.Append($" get=>{field}.{name};");
+                if (!prop.IsReadOnly) sb.Append($" set=>{field}.{name}=value;");
+                sb.AppendLine("}");
+            }
+
+            void ExplicitProperty()
+            {
+                sb.Append($"\t\t {tipo} {interfacename}.{name}");
+                sb.Append("{");
+                if (!prop.IsWriteOnly) sb.Append($" get=>{field}.{name};");
+                if (!prop.IsReadOnly) sb.Append($" set=>{field}.{name}=value;");
+                sb.AppendLine("}");
+
+                var includeoverride = specialatt.GetShortName() == "ExplicitOverrideNoBase";
+                if (includeoverride)
+                {
+                    var thias = $"(this as {interfacename})";
+
+                    sb.Append($"\t\tprotected override {tipo} {name}");
+                    sb.Append("{");
+                    if (!prop.IsWriteOnly) sb.Append($" get=>{thias}.{name};");
+                    if (!prop.IsReadOnly) sb.Append($" set=>{thias}.{name}=value;");
+                    sb.AppendLine("}");
+                }
+            }
         }
 
         private static string GetOverrideString(AttributeData aoverride)
@@ -113,29 +153,83 @@ namespace Rop.ProxyGenerator
             var name = meth.Name;
             var tipo = meth.ReturnType.ToString();
             var field = classToAugment.InterfaceToProxy.FieldName;
-            var aoverride=meth.GetDecoratedWith(_memberOverrideAttsHash);
-            var voro = GetOverrideString(aoverride);
-            var prebase = aoverride.GetShortName() == "OverrideWithPreBase";
-            var postbase = aoverride.GetShortName() == "OverrideWithPostBase";
-            var pdef = string.Join(", ", meth.Parameters.Select(p =>$"{p.Type.ToString()} {p.MetadataName}"));
-            var pnames= string.Join(", ", meth.Parameters.Select(p => p.MetadataName));
-            var retstr = (tipo == "void") ? "" : "return ";
+            var interfacename=classToAugment.InterfaceToProxy.InterfaceName.FullName;
 
-            sb.AppendLines(2,
-                $"public {voro} {tipo} {name} ({pdef})",
-                "{");
-            if (prebase) 
-                sb.AppendLines(3,
-                    $"base.{name}({pnames});");
-            if (!postbase)
-                sb.AppendLines(3,
-                    $"{retstr}{field}.{name} ({pnames});");
+            var specialatt = meth.GetDecoratedWith(_memberAllAttsHash);
+            var isexplicit =(specialatt!=null)&& _memberExplicitAttsHash.Contains(specialatt.GetShortName());
+
+            if (isexplicit)
+            {
+                ExplicitMethod();
+            }
             else
-                sb.AppendLines(3, 
-                    $"{field}.{name} ({pnames});",
-                    $"{retstr}{field}.{name} ({pnames});");
-            sb.AppendLines(2,
-                "}");
+            {
+                NoExplicitMethod();
+            }
+
+            // Local Functions
+            void MethodBody(bool prebase,bool postbase, string pnames , string retstr)
+            {
+                if (prebase)
+                    sb.AppendLines(3,
+                        $"base.{name}({pnames});");
+                if (!postbase)
+                    sb.AppendLines(3,
+                        $"{retstr}{field}.{name}({pnames});");
+                else
+                    sb.AppendLines(3,
+                        $"{field}.{name}({pnames});",
+                        $"{retstr}base.{name}({pnames});");
+            }
+
+            void ExplicitMethod()
+            {
+                var aexplicit = specialatt;
+                var nobase = aexplicit.GetShortName() == "ExplicitOverrideNoBase";
+                var prebase = aexplicit.GetShortName() == "ExplicitOverrideWithPreBase";
+                var postbase = aexplicit.GetShortName() == "ExplicitOverrideWithPostBase";
+
+                var pdef = string.Join(", ", meth.Parameters.Select(p => $"{p.Type.ToString()} {p.MetadataName}"));
+                var pnames = string.Join(", ", meth.Parameters.Select(p => p.MetadataName));
+                var retstr = (tipo == "void") ? "" : "return ";
+                var includeoverride = nobase | prebase | postbase;
+
+                sb.AppendLines(2,
+                    $"{tipo} {interfacename}.{name}({pdef})",
+                    "{");
+                MethodBody(prebase, postbase, pnames, retstr);
+                sb.AppendLines(2,
+                    "}");
+
+                if (includeoverride)
+                {
+                    var thisas = $"(this as {interfacename})";
+                    sb.AppendLines(2,
+                        $"protected override {tipo} {name}({pdef})",
+                        "{");
+                    sb.AppendLines(3, $"{retstr}{thisas}.{name}({pnames});");
+                    sb.AppendLines(2,
+                        "}");
+                }
+            }
+
+            void NoExplicitMethod()
+            {
+                var aoverride = specialatt;
+                var voro = GetOverrideString(aoverride);
+                var prebase = aoverride.GetShortName() == "OverrideWithPreBase";
+                var postbase = aoverride.GetShortName() == "OverrideWithPostBase";
+                var pdef = string.Join(", ", meth.Parameters.Select(p => $"{p.Type.ToString()} {p.MetadataName}"));
+                var pnames = string.Join(", ", meth.Parameters.Select(p => p.MetadataName));
+                var retstr = (tipo == "void") ? "" : "return ";
+
+                sb.AppendLines(2,
+                    $"public {voro} {tipo} {name}({pdef})",
+                    "{");
+                MethodBody(prebase, postbase, pnames, retstr);
+                sb.AppendLines(2,
+                    "}");
+            }
         }
 
         class ProxyClassesToAugmentReceiver : ISyntaxReceiver

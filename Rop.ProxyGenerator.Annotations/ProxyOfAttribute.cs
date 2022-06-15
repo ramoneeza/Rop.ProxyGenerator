@@ -22,14 +22,4 @@ namespace Rop.ProxyGenerator.Annotations
             Exclude=exclude;
         }
     }
-    [AttributeUsage(AttributeTargets.Method)]
-    public class OverrideWithPreBaseAttribute : Attribute { }
-    [AttributeUsage(AttributeTargets.Method)]
-    public class OverrideWithPostBaseAttribute : Attribute { }
-    [AttributeUsage(AttributeTargets.Method|AttributeTargets.Property)]
-    public class OverrideNoBaseAttribute : Attribute { }
-
-    [AttributeUsage(AttributeTargets.Method|AttributeTargets.Property)]
-    public class OverrideNewAttribute : Attribute { }
-
 }
