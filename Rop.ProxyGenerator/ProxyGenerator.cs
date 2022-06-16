@@ -59,7 +59,8 @@ namespace Rop.ProxyGenerator
             foreach (var symbol in symbols)
             {
                 var name = symbol.Name;
-                if (classtoaugment.InterfaceToProxy.Excludes.Contains(name))
+                var excludeatt = symbol.IsDecoratedWith("Exclude");
+                if (excludeatt || classtoaugment.InterfaceToProxy.Excludes.Contains(name))
                 {
                     sb.AppendLine();
                     sb.AppendLines(2,$"// Symbol '{name}' excluded");

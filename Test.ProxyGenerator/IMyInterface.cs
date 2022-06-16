@@ -10,6 +10,8 @@ public interface ISub
 
     [Explicit]
     object SubMethod(string hello);
+    [Exclude]
+    object SubExcluido { get; }
 }
 
 public interface IMyInterface<T>:ISub
