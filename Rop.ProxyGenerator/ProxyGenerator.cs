@@ -120,7 +120,7 @@ namespace Rop.ProxyGenerator
 
             void ExplicitProperty()
             {
-                sb.Append($"\t\t {tipo} {interfacename}.{name}");
+                sb.Append($"\t\t{tipo} {prop}");
                 sb.Append("{");
                 if (!prop.IsWriteOnly) sb.Append($" get=>{field}.{name};");
                 if (!prop.IsReadOnly) sb.Append($" set=>{field}.{name}=value;");
@@ -205,7 +205,7 @@ namespace Rop.ProxyGenerator
                 var retstr = (tipo == "void") ? "" : "return ";
                 var includeoverride = nobase | prebase | postbase;
                 sb.AppendLines(2,
-                    $"{tipo} {interfacename}.{name}({pdef})",
+                    $"{tipo} {meth.ReceiverType}.{meth.Name}({pdef})",
                     "{");
                 MethodBody(prebase, postbase, pnames, retstr);
                 sb.AppendLines(2,

@@ -1,6 +1,18 @@
-﻿namespace Test.ProxyGenerator;
+﻿using Rop.ProxyGenerator.Annotations;
 
-public interface IMyInterface<T>
+namespace Test.ProxyGenerator;
+
+
+public interface ISub
+{
+    [Explicit] 
+    object SubProperty { get; set; }
+
+    [Explicit]
+    object SubMethod(string hello);
+}
+
+public interface IMyInterface<T>:ISub
 {
     event EventHandler ValueChanged;
     event EventHandler<T> TValueChanged;
