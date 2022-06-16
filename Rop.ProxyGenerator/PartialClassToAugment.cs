@@ -9,6 +9,8 @@ namespace Rop.ProxyGenerator
     public class PartialClassToAugment
     {
         public bool IsStatic { get; }
+        public bool IsGeneric { get; }
+        public string GenericTypes { get; }
         public string Identifier { get; }
         public string FileName { get;  }
         public string Namespace { get;  }
@@ -23,6 +25,8 @@ namespace Rop.ProxyGenerator
             Usings = classToAugment.SyntaxTree.GetUsings().ToList();
             Namespace = classToAugment.SyntaxTree.GetNamespace();
             IsStatic = classToAugment.IsStatic();
+            IsGeneric = classToAugment.IsGeneric();
+            GenericTypes = (IsGeneric) ? classToAugment.TypeParameterList?.ToString()??"" : "";
         }
         public IEnumerable<string> GetHeader(INamedTypeSymbol interfacetoinclude)
         {
@@ -34,7 +38,7 @@ namespace Rop.ProxyGenerator
             yield return $"namespace {Namespace}";
             yield return "{";
             //yield return $"\tpublic {(IsStatic?"static ":"")}partial class {Identifier}:{interfacetoinclude.ToDisplayString()}";
-            yield return $"\tpublic {(IsStatic?"static ":"")}partial class {Identifier}";
+            yield return $"\tpublic {(IsStatic?"static ":"")}partial class {Identifier}{GenericTypes}";
             yield return "\t{";
         }
         public IEnumerable<string> GetFooter()

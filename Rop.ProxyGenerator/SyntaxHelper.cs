@@ -28,6 +28,10 @@ namespace Rop.ProxyGenerator
         {
            return cds.Modifiers.Any(SyntaxKind.StaticKeyword);
         }
+        public static bool IsGeneric(this ClassDeclarationSyntax cds)
+        {
+            return cds.TypeParameterList?.Parameters.Count > 0;
+        }
 
         public static TypeName GetInterfaceImplementation(this ClassDeclarationSyntax cds, TypeName originalinterface)
         {
