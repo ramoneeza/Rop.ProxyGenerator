@@ -86,16 +86,37 @@ namespace Rop.ProxyGenerator
             return r.ChildNodesOfType<BaseNamespaceDeclarationSyntax>().FirstOrDefault()?.Name.ToString();
         }
 
-        public static IEnumerable<ISymbol> GetOrderedMembers(this INamedTypeSymbol typeSymbol)
+        public static IEnumerable<ISymbol> GetOrderedMembers(this INamedTypeSymbol typeSymbol,bool inherited)
         {
-            var morder = typeSymbol.MemberNames.ToList();
-            var mnames = morder.ToImmutableHashSet();
-            var dic=typeSymbol.GetMembers().Where(mm => mm.Name.InList(mnames)).ToDictionary(mm=>mm.Name);
+            var morder = new List<string>();
+            var dic=new Dictionary<string,ISymbol>();
+            _getOrderedMembers(typeSymbol,inherited,morder,dic);
+            //var mnames = morder.ToImmutableHashSet();
+            //var dic=typeSymbol.GetMembers().Where(mm => mm.Name.InList(mnames)).ToDictionary(mm=>mm.Name);
             foreach (var m in morder)
             {
                 yield return dic[m];
             }
         }
 
+        private static void _getOrderedMembers(this INamedTypeSymbol typeSymbol, bool inherited,List<string> morder,Dictionary<string,ISymbol> dic)
+        {
+            if (inherited)
+            {
+                var sub = typeSymbol.Interfaces;
+                foreach (var s in sub)
+                {
+                    _getOrderedMembers(s,true, morder,dic);
+                }
+            }
+            var singlemorder = typeSymbol.MemberNames;
+            morder.AddRange(singlemorder);
+            var mnames = morder.ToImmutableHashSet();
+            foreach (var m in typeSymbol.GetMembers())
+            {
+                if (!m.Name.InList(mnames)) continue;
+                dic[m.Name] = m;
+            }
+        }
     }
 }

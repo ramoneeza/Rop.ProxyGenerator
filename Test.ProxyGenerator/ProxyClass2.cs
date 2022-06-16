@@ -37,10 +37,14 @@ public partial class OneClase4:OneClase3, IOv1
     }
 }
 
-public interface IOv1
+public interface IPrevio
 {
     [OverrideWithPreBase]
     int MyMethod(int a,int b);
+}
+
+public interface IOv1:IPrevio
+{
     [OverrideWithPostBase]
     int MyMethod2(int a,int b);
     [ExplicitOverrideNoBase]
