@@ -45,9 +45,21 @@ namespace Rop.ProxyGenerator
         public bool Equals(INamedTypeSymbol interf)
         {
             if (interf?.Name != Name) return false;
-            var ts = interf.TypeArguments.Select(a => a.ToString()).ToArray();
-            if (GenericNames.Length!=ts.Length) return false;
-            return Enumerable.SequenceEqual(GenericNames.Select(g=>g.FullName), ts);
+            var ts = interf.TypeArguments.Select(a => a.ToString()).ToList();
+            if (GenericNames.Length!=ts.Count) return false;
+            for (var f = 0; f < GenericNames.Length; f++)
+            {
+                var a = ts[f];
+                var b = GenericNames[f].FullName;
+                if (a.Equals(b)) continue;
+                var p = a.LastIndexOf('.');
+                if (p != -1)
+                {
+                    a = a.Substring(p + 1);
+                }
+                if (!a.Equals(b)) return false;
+            }
+            return true;
         }
     }
 }

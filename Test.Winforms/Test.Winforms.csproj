@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+	  <UseWindowsForms>true</UseWindowsForms>
+	  <Title>Rop.Winforms.ControlValue</Title>
+	  <LangVersion>9.0</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Rop.ProxyGenerator.Annotations\Rop.ProxyGenerator.Annotations.csproj" />
+    <ProjectReference Include="..\Rop.ProxyGenerator\Rop.ProxyGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Rop.Winforms.Basic" Version="1.0.27" />
+		<PackageReference Include="Rop.Winforms.ListComboBox" Version="1.0.4" />
+	</ItemGroup>
+</Project>

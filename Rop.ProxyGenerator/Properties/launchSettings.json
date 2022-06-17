@@ -5,7 +5,7 @@
     },
     "DebugComponent": {
       "commandName": "DebugRoslynComponent",
-      "targetProject": "..\\test.proxygenerator\\test.proxygenerator.csproj"
+      "targetProject": "..\\test.winforms\\test.winforms.csproj"
     }
   }
 }
