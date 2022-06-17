@@ -203,7 +203,7 @@ namespace Test.Winforms
 #pragma warning restore IDE0051 // Quitar miembros privados no utilizados
     }
 
-    [ProxyOf("IHasOut","_controlIHasOut")]
+    [ProxyOf("IHasOut","_controlIHasOut",new []{"DoNothing"})]
     public partial class ConUnOut : IHasOut
     {
         private HasOutAop _controlHasOutAop;

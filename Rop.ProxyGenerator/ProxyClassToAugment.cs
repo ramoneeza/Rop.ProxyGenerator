@@ -22,14 +22,41 @@ namespace Rop.ProxyGenerator
     {
         public TypeName InterfaceName { get; set; }
         public string FieldName { get; set; }
-        public ImmutableHashSet<string> Excludes { get; set; }
+        public ImmutableHashSet<string> Excludes { get; } 
         public string[] GenericNames { get; set; } = Array.Empty<string>();
 
+        private static string _inside(string left, string right, string cad)
+        {
+            var p1 = cad.IndexOf(left);
+            var p2 = cad.LastIndexOf(right);
+            if (p1 == -1 || p2 == -1) return "";
+            return cad.Substring(p1 + 1, p2 - p1 - 1);
+        }
+        private string _stripnames(string cad)
+        {
+            if (cad.StartsWith("nameof("))
+            {
+                cad = _inside("(", ")", cad);
+            }
+            if (cad.StartsWith("\""))
+            {
+                cad=_inside("\"", "\"", cad);
+            }
+            return cad;
+        }
         private InterfaceToProxy(TypeName interfacename, string fieldname, string excludesstr)
         {
             InterfaceName = interfacename;
             FieldName = fieldname;
-            var exc = excludesstr.Split(new[] {','}, StringSplitOptions.RemoveEmptyEntries);
+            var p1 = excludesstr.IndexOf("{");
+            var p2 = excludesstr.IndexOf("}");
+            var exc = new List<string>();
+            if (p1 != -1 && p2 != -1)
+            {
+                excludesstr = _inside("{", "}",excludesstr);
+                var exct = excludesstr.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries).Select(s => _stripnames(s));
+                exc.AddRange(exct);
+            }
             Excludes = exc.ToImmutableHashSet();
         }
 
