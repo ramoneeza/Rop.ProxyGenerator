@@ -214,6 +214,11 @@ namespace Test.Winforms
             {
                 throw new NotImplementedException();
             }
+
+            public bool TryGetValue(int key, out int value)
+            {
+                throw new NotImplementedException();
+            }
         }
     }
 }

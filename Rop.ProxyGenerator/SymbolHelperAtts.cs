@@ -89,6 +89,13 @@ namespace Rop.ProxyGenerator
             var pdef = string.Join(",",pars);
             return pdef;
         }
+        public static string GetParametersSignature(this IMethodSymbol meth)
+        {
+            var pars = meth.Parameters.Select(p => $"{p.OriginalDefinition}");
+            var pdef = string.Join(",",pars);
+            return pdef;
+        }
+
         public static string GetParametersNames(this IMethodSymbol meth)
         {
             var pars = new List<string>();
@@ -110,5 +117,16 @@ namespace Rop.ProxyGenerator
             return j;
         }
 
+        public static string ToSignature(this ISymbol s)
+        {
+            switch (s)
+            {
+                case IMethodSymbol m:
+                    
+                    return $"{m.Name}({m.GetParametersSignature()})";
+                default:
+                    return s.Name;
+            }
+        }
     }
 }

@@ -92,18 +92,64 @@ namespace Rop.ProxyGenerator
 
         public static IEnumerable<ISymbol> GetOrderedMembers(this INamedTypeSymbol typeSymbol,bool inherited)
         {
-            var morder = new List<string>();
+            var morder = new OrderedNames();
             var dic=new Dictionary<string,ISymbol>();
             _getOrderedMembers(typeSymbol,inherited,morder,dic);
             //var mnames = morder.ToImmutableHashSet();
             //var dic=typeSymbol.GetMembers().Where(mm => mm.Name.InList(mnames)).ToDictionary(mm=>mm.Name);
-            foreach (var m in morder)
+            foreach (var m in dic.Values)
             {
-                yield return dic[m];
+                yield return m;
             }
         }
 
-        private static void _getOrderedMembers(this INamedTypeSymbol typeSymbol, bool inherited,List<string> morder,Dictionary<string,ISymbol> dic)
+        private class OrderedName
+        {
+            public string Name { get; set; }
+            public int Order { get; set; } = 999999;
+        }
+
+        private class OrderedNames
+        {
+            private readonly Dictionary<string,OrderedName> _dic=new Dictionary<string,OrderedName>();
+
+            public void Add(string name)
+            {
+                if (_dic.ContainsKey(name)) return;
+                _dic[name] = new OrderedName() { Name = name, Order = _dic.Count };
+            }
+
+            public void AddRange(IEnumerable<string> name)
+            {
+                foreach (var n in name)
+                {
+                    Add(n);
+                }
+            }
+
+            public OrderedName Get(string name)
+            {
+                if (!_dic.TryGetValue(name, out var res)) return null;
+                return res;
+            }
+            public bool Contains(string name) => _dic.ContainsKey(name);
+        }
+
+        private class OrderedMember  
+        {
+           public OrderedMember(ISymbol m, OrderedName order)
+            {
+                this.Member = m;
+                this.Order = order.Order;
+                Name = m.Name;
+                Signature = m.ToSignature();
+            }
+
+            public string Name { get; }
+            public string Signature { get; }
+            public ISymbol Member { get; }
+            public int Order { get; set; } = 999999;
+        } private static void _getOrderedMembers(this INamedTypeSymbol typeSymbol, bool inherited,OrderedNames morder,Dictionary<string,ISymbol> dic)
         {
             if (inherited)
             {
@@ -115,11 +161,18 @@ namespace Rop.ProxyGenerator
             }
             var singlemorder = typeSymbol.MemberNames;
             morder.AddRange(singlemorder);
-            var mnames = morder.ToImmutableHashSet();
+            var lstmembers = new List<OrderedMember>();
             foreach (var m in typeSymbol.GetMembers())
             {
-                if (!m.Name.InList(mnames)) continue;
-                dic[m.Name] = m;
+                if (!(m is IEventSymbol || m is IPropertySymbol || m is IMethodSymbol)) continue;
+                var order = morder.Get(m.Name);
+                if (order == null) continue;
+                lstmembers.Add(new OrderedMember(m,order));
+            }
+            lstmembers = lstmembers.OrderBy(m => m.Order).ToList();
+            foreach (var m in lstmembers)
+            {
+                dic[m.Signature] = m.Member;
             }
         }
     }
