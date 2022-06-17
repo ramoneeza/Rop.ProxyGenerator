@@ -202,4 +202,18 @@ namespace Test.Winforms
             DTN_CLOSEUP = ((0 - 760) + 7);
 #pragma warning restore IDE0051 // Quitar miembros privados no utilizados
     }
+
+    [ProxyOf("IHasOut","_controlIHasOut")]
+    public partial class ConUnOut : IHasOut
+    {
+        private HasOutAop _controlHasOutAop;
+
+        private class HasOutAop : IHasOut
+        {
+            public bool TryGetValue(int key, out string value)
+            {
+                throw new NotImplementedException();
+            }
+        }
+    }
 }

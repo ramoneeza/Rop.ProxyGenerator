@@ -214,8 +214,9 @@ namespace Rop.ProxyGenerator
                 var prebase = aexplicit.GetShortName() == "ExplicitOverrideWithPreBase";
                 var postbase = aexplicit.GetShortName() == "ExplicitOverrideWithPostBase";
 
-                var pdef = string.Join(", ", meth.Parameters.Select(p => $"{p.Type.ToString()} {p.MetadataName}"));
-                var pnames = string.Join(", ", meth.Parameters.Select(p => p.MetadataName));
+                var pdef =meth.GetParametersDefinition();
+                var pnames = meth.GetParametersNames();
+
                 var retstr = (tipo == "void") ? "" : "return ";
                 var includeoverride = nobase | prebase | postbase;
                 sb.AppendLines(2,
@@ -244,8 +245,8 @@ namespace Rop.ProxyGenerator
                 var voro = GetOverrideString(aoverride);
                 var prebase = aoverride.GetShortName() == "OverrideWithPreBase";
                 var postbase = aoverride.GetShortName() == "OverrideWithPostBase";
-                var pdef = string.Join(", ", meth.Parameters.Select(p => $"{p.Type.ToString()} {p.MetadataName}"));
-                var pnames = string.Join(", ", meth.Parameters.Select(p => p.MetadataName));
+                var pdef =meth.GetParametersDefinition();
+                var pnames = meth.GetParametersNames();
                 var retstr = (tipo == "void") ? "" : "return ";
                 includeatts.Render(sb,2);
                 sb.AppendLines(2,

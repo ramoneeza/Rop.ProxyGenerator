@@ -82,5 +82,33 @@ namespace Rop.ProxyGenerator
             var lst = attname2.Prepend(attname);
             return GetDecoratedWith(item,lst);
         }
+
+        public static string GetParametersDefinition(this IMethodSymbol meth)
+        {
+            var pars = meth.Parameters.Select(p => $"{p.OriginalDefinition} {p.MetadataName}");
+            var pdef = string.Join(",",pars);
+            return pdef;
+        }
+        public static string GetParametersNames(this IMethodSymbol meth)
+        {
+            var pars = new List<string>();
+            foreach (var p in meth.Parameters)
+            {
+                var ps = p.MetadataName;
+                switch (p.RefKind)
+                {
+                    case RefKind.In: ps = "in " + ps;
+                        break;
+                    case RefKind.Out: ps = "out " + ps;
+                        break;
+                    case RefKind.Ref: ps = "ref " + ps;
+                        break;
+                }
+                pars.Add(ps);
+            }
+            var j = string.Join(",",pars);
+            return j;
+        }
+
     }
 }
