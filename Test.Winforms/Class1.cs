@@ -219,6 +219,11 @@ namespace Test.Winforms
             {
                 throw new NotImplementedException();
             }
+
+            public bool DoNothing()
+            {
+                throw new NotImplementedException();
+            }
         }
     }
 }

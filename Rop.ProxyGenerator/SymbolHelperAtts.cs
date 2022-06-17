@@ -85,9 +85,23 @@ namespace Rop.ProxyGenerator
 
         public static string GetParametersDefinition(this IMethodSymbol meth)
         {
-            var pars = meth.Parameters.Select(p => $"{p.OriginalDefinition} {p.MetadataName}");
-            var pdef = string.Join(",",pars);
-            return pdef;
+            var pars = new List<string>();
+            foreach (var p in meth.Parameters)
+            {
+                var ps =$"{p.Type} {p.MetadataName}";
+                switch (p.RefKind)
+                {
+                    case RefKind.In: ps = "in " + ps;
+                        break;
+                    case RefKind.Out: ps = "out " + ps;
+                        break;
+                    case RefKind.Ref: ps = "ref " + ps;
+                        break;
+                }
+                pars.Add(ps);
+            }
+            var j = string.Join(",",pars);
+            return j;
         }
         public static string GetParametersSignature(this IMethodSymbol meth)
         {
