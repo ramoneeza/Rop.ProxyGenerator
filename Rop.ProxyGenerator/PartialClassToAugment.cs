@@ -14,6 +14,7 @@ namespace Rop.ProxyGenerator
         public string Identifier { get; }
         public string FileName { get;  }
         public string Namespace { get;  }
+        public string Modifier { get; }
         public IReadOnlyList<(string name, string sentence)> Usings { get;  }
         public ClassDeclarationSyntax Original { get; }
         public PartialClassToAugment(ClassDeclarationSyntax classToAugment)
@@ -24,6 +25,7 @@ namespace Rop.ProxyGenerator
             FileName = (string.IsNullOrEmpty(stfp)) ? Identifier : stfp;
             Usings = classToAugment.SyntaxTree.GetUsings().ToList();
             Namespace = classToAugment.SyntaxTree.GetNamespace();
+            Modifier = classToAugment.Modifiers.FirstOrDefault().ToString();
             IsStatic = classToAugment.IsStatic();
             IsGeneric = classToAugment.IsGeneric();
             GenericTypes = (IsGeneric) ? classToAugment.TypeParameterList?.ToString()??"" : "";
@@ -38,7 +40,7 @@ namespace Rop.ProxyGenerator
             yield return $"namespace {Namespace}";
             yield return "{";
             //yield return $"\tpublic {(IsStatic?"static ":"")}partial class {Identifier}:{interfacetoinclude.ToDisplayString()}";
-            yield return $"\tpublic {(IsStatic?"static ":"")}partial class {Identifier}{GenericTypes}";
+            yield return $"\t{Modifier} {(IsStatic?"static ":"")}partial class {Identifier}{GenericTypes}";
             yield return "\t{";
         }
         public IEnumerable<string> GetFooter()

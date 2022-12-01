@@ -53,10 +53,11 @@ namespace Rop.ProxyGenerator
             var exc = new List<string>();
             if (p1 != -1 && p2 != -1)
             {
-                excludesstr = _inside("{", "}",excludesstr);
-                var exct = excludesstr.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries).Select(s => _stripnames(s));
-                exc.AddRange(exct);
+                excludesstr = _inside("{", "}", excludesstr);
             }
+
+            var exct = excludesstr.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries).Select(s => _stripnames(s));
+            exc.AddRange(exct);
             Excludes = exc.ToImmutableHashSet();
         }
 
