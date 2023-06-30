@@ -7,4 +7,8 @@ namespace Test.Winforms
         DateTime Fecha { get; }
         int Serial { get; }
     }
+    public interface IOv2
+    {
+        string Secundario { get; }
+    }
 }

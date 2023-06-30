@@ -15,6 +15,7 @@ namespace Rop.ProxyGenerator
         public string FileName { get;  }
         public string Namespace { get;  }
         public string Modifier { get; }
+        public bool DisableNullable { get; }
         public IReadOnlyList<(string name, string sentence)> Usings { get;  }
         public ClassDeclarationSyntax Original { get; }
         public PartialClassToAugment(ClassDeclarationSyntax classToAugment)
@@ -29,9 +30,22 @@ namespace Rop.ProxyGenerator
             IsStatic = classToAugment.IsStatic();
             IsGeneric = classToAugment.IsGeneric();
             GenericTypes = (IsGeneric) ? classToAugment.TypeParameterList?.ToString()??"" : "";
+            var attr=classToAugment.GetDecoratedWith("ProxyOfDisableNullable");
+            if (attr!=null)
+            {
+                DisableNullable = true;
+            }
         }
         public IEnumerable<string> GetHeader(INamedTypeSymbol interfacetoinclude)
         {
+            if (!DisableNullable)
+            {
+                yield return "#nullable enable";
+            }
+            else
+            {
+                yield return "// nullable is disabled by attribute";
+            }
             foreach (var u in Usings)
             {
                 yield return u.sentence;

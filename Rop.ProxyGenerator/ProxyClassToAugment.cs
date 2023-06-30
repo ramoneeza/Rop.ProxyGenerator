@@ -10,11 +10,10 @@ namespace Rop.ProxyGenerator
     {
         public PartialClassToAugment ClassToAugment { get; set; }
         public InterfaceToProxy InterfaceToProxy { get; private set; }
-        public ProxyClassToAugment(ClassDeclarationSyntax classToAugment)
+        public ProxyClassToAugment(ClassDeclarationSyntax classToAugment,AttributeSyntax att)
         {
             ClassToAugment = new PartialClassToAugment(classToAugment);
-            var att = classToAugment.GetDecoratedWith("ProxyOf");
-            InterfaceToProxy = InterfaceToProxy.Factory(classToAugment);
+            InterfaceToProxy = InterfaceToProxy.Factory(classToAugment,att);
         }
     }
 
@@ -61,9 +60,9 @@ namespace Rop.ProxyGenerator
             Excludes = exc.ToImmutableHashSet();
         }
 
-        public static InterfaceToProxy Factory(ClassDeclarationSyntax classToAugment)
+        public static InterfaceToProxy Factory(ClassDeclarationSyntax classToAugment,AttributeSyntax att)
         {
-            var att = classToAugment.GetDecoratedWith("ProxyOf");
+            //var att = classToAugment.GetDecoratedWith("ProxyOf");
             var values = att.ArgumentList.ToStringValues().ToList();
             if (values.Count < 2 || values.Count > 3) return null;
             var tipo =new TypeName(values[0]);

@@ -64,6 +64,14 @@ namespace Rop.ProxyGenerator
             return GetAttributes(item).FirstOrDefault(a => a.Name.ToString().Equals(attname));
         }
         /// <summary>
+        /// Get many decorated attributes for a class
+        /// </summary>
+        public static AttributeSyntax[] GetDecoratedWithSome(this MemberDeclarationSyntax item, string attname)
+        {
+            return GetAttributes(item).Where(a => a.Name.ToString().Equals(attname)).ToArray();
+        }
+
+        /// <summary>
         /// Get decorated attribute for a class
         /// </summary>
         public static AttributeSyntax GetDecoratedWith(this MemberDeclarationSyntax item,IEnumerable<string> attname)

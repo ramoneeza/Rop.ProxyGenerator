@@ -104,7 +104,7 @@ namespace Rop.ProxyGenerator
             var tipo = prop.Type;
             var field = classToAugment.InterfaceToProxy.FieldName;
             var interfacename=classToAugment.InterfaceToProxy.InterfaceName.FullName;
-
+            var includesetter=prop.GetDecoratedWith("AddSetterOnProxy")!=null;
             var specialatt = prop.GetDecoratedWith(_memberAllAttsHash);
             var isexplicit =(specialatt!=null)&& _memberExplicitAttsHash.Contains(specialatt.GetShortName());
 
@@ -128,7 +128,7 @@ namespace Rop.ProxyGenerator
                 sb.Append($"\t\tpublic {voro} {tipo} {name}");
                 sb.Append("{");
                 if (!prop.IsWriteOnly) sb.Append($" get=>{field}.{name};");
-                if (!prop.IsReadOnly) sb.Append($" set=>{field}.{name}=value;");
+                if (!prop.IsReadOnly || includesetter) sb.Append($" set=>{field}.{name}=value;");
                 sb.AppendLine("}");
             }
 
@@ -266,8 +266,12 @@ namespace Rop.ProxyGenerator
                 // Business logic to decide what we're interested in goes here
                 if (syntaxNode is ClassDeclarationSyntax cds && cds.IsDecoratedWith("ProxyOf"))
                 {
-                    var ac = new ProxyClassToAugment(cds);
-                    if (ac.InterfaceToProxy !=null) ClassesToAugment.Add(ac);
+                    var atts=cds.GetDecoratedWithSome("ProxyOf");
+                    foreach (var att  in atts)
+                    {
+                        var ac = new ProxyClassToAugment(cds,att);
+                        if (ac.InterfaceToProxy !=null) ClassesToAugment.Add(ac);
+                    }
                 }
             }
             public void Clear()
